@@ -32,6 +32,11 @@ elif [[ -e /etc/fedora-release ]]; then
 	os="fedora"
 	os_version=$(grep -oE '[0-9]+' /etc/fedora-release | head -1)
 	group_name="nobody"
+elif [[ -e /etc/arch-release ]]; then
+	os="arch"
+	# os version is not available in /etc/arch-release
+	# os_version=$(grep -oE '[0-9]+' /etc/fedora-release | head -1)
+	group_name="nobody"
 else
 	echo "This installer seems to be running on an unsupported distribution.
 Supported distros are Ubuntu, Debian, AlmaLinux, Rocky Linux, CentOS and Fedora."
@@ -210,7 +215,7 @@ if [[ ! -e /etc/openvpn/server/server.conf ]]; then
 			# We don't want to silently enable firewalld, so we give a subtle warning
 			# If the user continues, firewalld will be installed and enabled during setup
 			echo "firewalld, which is required to manage routing tables, will also be installed."
-		elif [[ "$os" == "debian" || "$os" == "ubuntu" ]]; then
+		elif [[ "$os" == "debian" || "$os" == "ubuntu" || "$os" == "arch" ]]; then
 			# iptables is way less invasive than firewalld so no warning is given
 			firewall="iptables"
 		fi
@@ -228,6 +233,8 @@ LimitNPROC=infinity" > /etc/systemd/system/openvpn-server@server.service.d/disab
 	elif [[ "$os" = "centos" ]]; then
 		dnf install -y epel-release
 		dnf install -y openvpn openssl ca-certificates tar $firewall
+	elif [[ "$os" = "arch" ]]; then
+		pacman -S --noconfirm openvpn openssl ca-certificates tar $firewall
 	else
 		# Else, OS must be Fedora
 		dnf install -y openvpn openssl ca-certificates tar $firewall
